@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progressive Download Video</title>
+</head>
+<body>
+<h1>Test Video: Progressive Download</h1>
+<video controls width="720" >
+    <source src="optimized_video.mp4" type="video/mp4">
+</video>
+</body>
+</html>
+
+
+<!-- Autoplay only works with muted. But probably not necessary. -->
+
+<!-- ffmpeg -i video_website/test_video.mp4 -movflags faststart optimized_video.mp4 (To copy moov atom to the beginning of the video for faster start) -->
