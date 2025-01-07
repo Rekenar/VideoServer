@@ -3,13 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Progressive Download Video</title>
+    <title>DASH VOD</title>
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+    </style>
 </head>
 <body>
-<h1>Test Video: Progressive Download</h1>
-<video controls width="720" >
-    <source src="optimized_video.mp4" type="video/mp4">
-</video>
+<h1>Test Video: DASH VOD</h1>
+<!--<video controls width="720" >
+    <source src="output_file.mkv" type="video/mp4">
+</video>-->
+<div>
+    <video id="videoPlayer" controls="true" preload="auto"></video>
+</div>
+<script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
+<script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
+<script>
+    (function () {
+        var url = "/nekaj1/out.mpd";
+        var player = dashjs.MediaPlayer().create();
+        player.initialize(document.querySelector("#videoPlayer"), url, false);
+        var controlbar = new ControlBar(player);
+        controlbar.initialize();
+    })();
+</script>
 </body>
 </html>
 
