@@ -19,12 +19,71 @@
 <div>
     <video id="videoPlayer" controls="true" preload="auto"></video>
 </div>
+<div>
+    <h4>Metrics</h4>
+    <div>
+        <strong>Reported bitrate:</strong>
+        <span id="reportedBitrate">760 Kbps</span>
+        <br>
+        <strong>Buffer level:</strong>
+        <span id="bufferLevel">0 secs</span>
+        <div id="chrome-only">
+            <strong>Calculated bitrate:</strong>
+            <span id="calculatedBitrate">0 Kbps</span>
+        </div>
+        <strong>Framerate:</strong>
+        <span id="framerate">30 fps</span>
+        <br>
+        <strong>Resolution:</strong>
+        <span id="resolution">480x720</span>
+    </div>
+</div>
 <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
 <script>
     (function () {
-        var url = "/chunks/out.mpd";
+        var video = document.querySelector("video");
+        var url = "/nekaj1/out.mpd";
         var player = dashjs.MediaPlayer().create();
         player.initialize(document.querySelector("#videoPlayer"), url, false);
+        player.on(dashjs.MediaPlayer.events["PLAYBACK_ENDED"], function () {
+            clearInterval(eventPoller);
+            clearInterval(bitrateCalculator);
+        });
+
+        var eventPoller = setInterval(function () {
+            var streamInfo = player.getActiveStream().getStreamInfo();
+            var dashMetrics = player.getDashMetrics();
+            var dashAdapter = player.getDashAdapter();
+
+            if (dashMetrics && streamInfo) {
+                const periodIdx = streamInfo.index;
+                var repSwitch = dashMetrics.getCurrentRepresentationSwitch('video', true);
+                var bufferLevel = dashMetrics.getCurrentBufferLevel('video', true);
+                var bitrate = repSwitch ? Math.round(dashAdapter.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
+                var adaptation = dashAdapter.getAdaptationForType(periodIdx, 'video', streamInfo);
+                var currentRep = adaptation.Representation_asArray.find(function (rep) {
+                    return rep.id === repSwitch.to
+                })
+                var frameRate = currentRep.frameRate;
+                var resolution = currentRep.width + 'x' + currentRep.height;
+                document.getElementById('bufferLevel').innerText = bufferLevel + " secs";
+                document.getElementById('framerate').innerText = frameRate + " fps";
+                document.getElementById('reportedBitrate').innerText = bitrate + " Kbps";
+                document.getElementById('resolution').innerText = resolution;
+            }
+        }, 1000);
+        if (video.webkitVideoDecodedByteCount !== undefined) {
+            var lastDecodedByteCount = 0;
+            const bitrateInterval = 5;
+            var bitrateCalculator = setInterval(function () {
+                var calculatedBitrate = (((video.webkitVideoDecodedByteCount - lastDecodedByteCount) / 1000) * 8) / bitrateInterval;
+                document.getElementById('calculatedBitrate').innerText = Math.round(calculatedBitrate) + " Kbps";
+                lastDecodedByteCount = video.webkitVideoDecodedByteCount;
+            }, bitrateInterval * 1000);
+        } else {
+            console.log("video.webkitVideoDecodedByteCount is undefined");
+            document.getElementById('chrome-only').style.display = "none";
+        }
 
     })();
 </script>
