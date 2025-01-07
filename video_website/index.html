@@ -20,14 +20,12 @@
     <video id="videoPlayer" controls="true" preload="auto"></video>
 </div>
 <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
-<script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
 <script>
     (function () {
-        var url = "/nekaj1/out.mpd";
+        var url = "/chunks/out.mpd";
         var player = dashjs.MediaPlayer().create();
         player.initialize(document.querySelector("#videoPlayer"), url, false);
-        var controlbar = new ControlBar(player);
-        controlbar.initialize();
+
     })();
 </script>
 </body>

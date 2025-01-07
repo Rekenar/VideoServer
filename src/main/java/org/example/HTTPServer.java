@@ -124,7 +124,7 @@ public class HTTPServer {
             if (filename.endsWith(".m4s")) return "video/mp4";
             if (filename.endsWith(".mp4")) return "video/mp4";
         }
-        return "application/octet-stream"; // Default typ
+        return "application/octet-stream"; // Default type
     }
 
 }
