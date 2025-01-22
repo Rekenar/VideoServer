@@ -48,8 +48,13 @@
         var prevDuration = 0;
 
         var results = [];
+        var stallingResults = [];
+        var stallingPair = [0,0];
+        var stallingBegin = -1;
+        var stallStartTime = 0;
+        var stallEndTime = 0;
         var resolution;
-        var bitrate;
+        var calculatedBitrate;
         var metricsJSON = {
             "I13": {              // video input information
                 "streamId": 42,   // unique identifier for the stream
@@ -76,18 +81,26 @@
             clearInterval(bitrateCalculator);
             clearInterval(bandwidthChanger);
             metricsJSON.I13.segments = results;
+            metricsJSON.I23.stalling = stallingResults;
             console.log(metricsJSON);
         });
 
 
         video.addEventListener("waiting", (event) => {
             console.log("Video is waiting for more data.");
-            console.log(event)
+            stallingBegin = player.time();
+            stallStartTime = performance.now();
+            stallingPair[0] = stallingBegin;
         });
 
         video.addEventListener("playing", (event) => {
-            console.log("Video is playing.");
-            console.log(event)
+            if (stallingBegin != -1){
+                stallEndTime = performance.now();
+                let duration =  ((stallEndTime - stallStartTime) / 1000)
+                duration = Math.round(duration*1e2) /1e2;
+                stallingPair[1]  = duration;
+                stallingResults.push(stallingPair)
+            }
         });
 
         var eventPoller = setInterval(function () {
@@ -116,7 +129,7 @@
             var lastDecodedByteCount = 0;
             const bitrateInterval = 5;
             var bitrateCalculator = setInterval(function () {
-                var calculatedBitrate = (((video.webkitVideoDecodedByteCount - lastDecodedByteCount) / 1000) * 8) / bitrateInterval;
+                calculatedBitrate = (((video.webkitVideoDecodedByteCount - lastDecodedByteCount) / 1000) * 8) / bitrateInterval;
                 document.getElementById('calculatedBitrate').innerText = Math.round(calculatedBitrate) + " Kbps";
                 lastDecodedByteCount = video.webkitVideoDecodedByteCount;
             }, bitrateInterval * 1000);
@@ -125,8 +138,6 @@
             document.getElementById('chrome-only').style.display = "none";
         }
 
-        //var bandwidth = PROFILE_SPIKE_JITTER[0].speed // set initial bandwidth
-        // set initial bandwidth with mininet
         var bandwidthChanger = setInterval(function () {
             let curDuration = player.time();
             if(Math.round(curDuration - prevDuration) >= 5){
@@ -134,14 +145,13 @@
                 results.push({
                     "codec": "h264",
                     "start": prevDuration,
-                    "duration": prevDuration - curDuration,
+                    "duration": curDuration - prevDuration,
                     "resolution": resolution,
-                    "bitrate": bitrate,
+                    "bitrate": Math.round(calculatedBitrate),
                     "fps": 30,
                 })
                 prevDuration = curDuration;
             }
-
         },5000)
 
     })();
